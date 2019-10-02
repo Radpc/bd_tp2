@@ -7,6 +7,7 @@
 
 using namespace std;
 
+
 class csv_line {
    public:
     csv_line(int f_id, string f_title, int f_year, string f_writers,
@@ -51,6 +52,10 @@ int readHelp() {
 bool has_suffix(const string &str, const string &suffix) {
     return str.size() >= suffix.size() &&
            str.compare(str.size() - suffix.size(), suffix.size(), suffix) == 0;
+}
+
+int insert_csv(string csv_name){
+    
 }
 
 int main(int argc, char *argv[]) {
