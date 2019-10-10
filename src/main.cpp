@@ -1,24 +1,50 @@
+// TP2 - Banco de dados
+// Autores: - Matheus Marques
+//          - Helder Medeiros
+//          - Vitor Hugo
+
+
+//##################################################\\============================================================================
+//                                                  \\============================================================================
+//               INCLUDES & INICIAÇÕES              \\============================================================================
+//                                                  \\============================================================================
+//##################################################\\============================================================================
+
+// Universal modules
 #include <pthread.h>  //Pthreads
-#include <unistd.h>
-#include <algorithm>  // std::count
-#include <fstream>
-#include <iostream>
-#include <string>
-#include <vector>
+#include <unistd.h>   //Time for debugging
+#include <fstream>    //Files
+#include <iostream>   //Files
+#include <vector>     //Vector
 
-#define SEC 1000000               // Valor de um segundo
-#define TAXA_ATUALIZACAO SEC / 2  // O fps
+// Custom modules
+#include "helper.h"
 
-#define HELP_FILE "help"
-#define MODE_INSERT 1
+// Options define's
+#define SEC 1000000                // Valor de um segundo
+#define TAXA_ATUALIZACAO SEC / 10  // O fps
 
+// Config define's
+#define HELP_FILE "help"  // Nome do arquivo de help
+#define MODE_INSERT 1     // Codigo do modo de inserir
+
+// Retirar a necessidade de escrever std
 using namespace std;
 
-// Global Variables
-double progress = 0;
+/// Global Variables
+// Quantidade de linhas lidas já
 int lines = 0;
-int total_lines = 0;
 
+// Progresso mostrando
+bool progress = true;
+
+//##################################################\\============================================================================
+//                                                  \\============================================================================
+//                      CLASSES                     \\============================================================================
+//                                                  \\============================================================================
+//##################################################\\============================================================================
+
+// Classe da linha do csv
 class csv_line {
    public:
     csv_line(int f_id, string f_title, int f_year, string f_writers,
@@ -45,30 +71,44 @@ class csv_line {
     string snippet;
 };
 
-// Função para limpar a tela
-void clrscr() { system("@cls||clear"); }
+//##################################################\\============================================================================
+//                                                  \\============================================================================
+//                      FUNÇÕES                     \\============================================================================
+//                                                  \\============================================================================
+//##################################################\\============================================================================
 
+// Thread para demonstrar o progresso
 void *t_progress(void *lpParam) {
-    while (progress <= 1.0) {
-        int barWidth = 70;
-
-        std::cout << "[";
-        int pos = barWidth * progress;
-        for (int i = 0; i < barWidth; ++i) {
-            if (i < pos)
-                std::cout << "=";
-            else if (i == pos)
-                std::cout << ">";
-            else
-                std::cout << " ";
+    int load = 0;
+    progress = true;
+    char l = ' ';
+    while (progress) {
+        switch (load) {
+            case 0:
+                l = '|';
+                load++;
+                break;
+            case 1:
+                l = '/';
+                load++;
+                break;
+            case 2:
+                l = '-';
+                load++;
+                break;
+            case 3:
+                l = '\\';
+                load = 0;
+                break;
         }
-        std::cout << "] " << int(progress * 100.0) << " %\r";
-        std::cout.flush();
 
-        progress = lines / total_lines;
-        usleep(SEC);
+        cout << "[";
+        cout << l;
+        cout << "] " << int(lines) << " lines     \r";
+        cout.flush();
+
+        usleep(TAXA_ATUALIZACAO);
     }
-    std::cout << std::endl;
 }
 
 int readHelp() {
@@ -86,12 +126,15 @@ int readHelp() {
     return 0;
 }
 
-bool has_suffix(const string &str, const string &suffix) {
-    return str.size() >= suffix.size() &&
-           str.compare(str.size() - suffix.size(), suffix.size(), suffix) == 0;
-}
-
 int insert_csv(string csv_name) {}
+
+
+//##################################################\\============================================================================
+//                                                  \\============================================================================
+//                        MAIN                      \\============================================================================
+//                                                  \\============================================================================
+//##################################################\\============================================================================
+
 
 int main(int argc, char *argv[]) {
     vector<string> cmdLineArgs(argv, argv + argc);
@@ -104,6 +147,7 @@ int main(int argc, char *argv[]) {
     // Iniciar modo
     int mode = -1;
 
+    // Tratar os argumentos
     for (auto &arg : cmdLineArgs) {
         if (arg == "--help" || arg == "-help") {
             readHelp();
@@ -116,16 +160,29 @@ int main(int argc, char *argv[]) {
         }
     }
 
+    // Tratar as criações de bancos
     for (auto i : insertFiles) {
+        cout << "Opening " << i << endl;
         ifstream my_file(i);
         string line;
         lines = 0;
         if (my_file.is_open()) {
-            // Iniciar barra com progress
+            cout << "File open!" << endl;
+            cout << "Reading..." << endl;
+            ofstream myfile;
+            myfile.open("example.bin", ios::out | ios::app | ios::binary);
             pthread_create(&aux, NULL, t_progress, NULL);
+            while (getline(my_file, line)) {  // Iniciar barra com progress
+                myfile << line << endl;
+                lines++;
+            }
+            progress = false;
+            cout << "DONE - [" << lines << " linhas]" << endl;
+            cout.flush();
 
-            while (getline(my_file, line)) lines++;
-            cout << lines << endl;
+        } else {
+            cout << "Some error ocurred..." << endl;
+            return -1;
         }
     }
 }
