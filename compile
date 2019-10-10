@@ -1,4 +1,4 @@
 #!/bin/bash
 
-g++ main.cpp -o tp1
+g++ src/main.cpp -o tp1 -pthread
 ./tp1
