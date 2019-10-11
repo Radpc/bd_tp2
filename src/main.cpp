@@ -164,7 +164,7 @@ int main(int argc, char *argv[]) {
     for (auto i : insertFiles) {
         cout << "Opening " << i << endl;
         ifstream my_file(i);
-        string line;/
+        string line;
         lines = 0;
         if (my_file.is_open()) {
             cout << "File open!" << endl;
