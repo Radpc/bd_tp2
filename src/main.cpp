@@ -164,16 +164,16 @@ int main(int argc, char *argv[]) {
     for (auto i : insertFiles) {
         cout << "Opening " << i << endl;
         ifstream my_file(i);
-        string line;
+        string line;/
         lines = 0;
         if (my_file.is_open()) {
             cout << "File open!" << endl;
             cout << "Reading..." << endl;
             ofstream myfile;
-            myfile.open("example.bin", ios::out | ios::app | ios::binary);
+            //myfile.open("example.bin", ios::out | ios::app | ios::binary);
             pthread_create(&aux, NULL, t_progress, NULL);
             while (getline(my_file, line)) {  // Iniciar barra com progress
-                myfile << line << endl;
+                //myfile << line << endl;
                 lines++;
             }
             progress = false;
