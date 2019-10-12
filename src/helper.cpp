@@ -7,3 +7,4 @@ bool has_suffix(const std::string &str, const std::string &suffix) {
 
 // Função para limpar a tela
 void clrscr() { system("@cls||clear"); }
+

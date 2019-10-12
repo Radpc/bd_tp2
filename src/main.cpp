@@ -3,10 +3,10 @@
 //          - Helder Medeiros
 //          - Vitor Hugo
 
-
 //##################################################\\============================================================================
 //                                                  \\============================================================================
-//               INCLUDES & INICIAÇÕES              \\============================================================================
+//               INCLUDES & INICIAÇÕES
+//                                                  \\============================================================================
 //                                                  \\============================================================================
 //##################################################\\============================================================================
 
@@ -16,6 +16,7 @@
 #include <fstream>    //Files
 #include <iostream>   //Files
 #include <vector>     //Vector
+#include <bits/stdc++.h> 
 
 // Custom modules
 #include "helper.h"
@@ -25,8 +26,7 @@
 #define TAXA_ATUALIZACAO SEC / 10  // O fps
 
 // Config define's
-#define HELP_FILE "help"  // Nome do arquivo de help
-#define MODE_INSERT 1     // Codigo do modo de inserir
+#define MODE_INSERT 1  // Codigo do modo de inserir
 
 // Retirar a necessidade de escrever std
 using namespace std;
@@ -40,7 +40,8 @@ bool progress = true;
 
 //##################################################\\============================================================================
 //                                                  \\============================================================================
-//                      CLASSES                     \\============================================================================
+//                      CLASSES
+//                                                  \\============================================================================
 //                                                  \\============================================================================
 //##################################################\\============================================================================
 
@@ -73,7 +74,8 @@ class csv_line {
 
 //##################################################\\============================================================================
 //                                                  \\============================================================================
-//                      FUNÇÕES                     \\============================================================================
+//                      FUNÇÕES
+//                                                  \\============================================================================
 //                                                  \\============================================================================
 //##################################################\\============================================================================
 
@@ -112,44 +114,48 @@ void *t_progress(void *lpParam) {
 }
 
 int readHelp() {
-    ifstream reader;
-    string output;
-
-    reader.open(HELP_FILE);
-
-    if (reader.is_open()) {
-        while (getline(reader, output)) {
-            cout << output << endl;
-        }
-    }
-    reader.close();
-    return 0;
+    cout << " -[DB - HELP]-" << endl << endl;
+    cout << " -i, --insert [FILES]          Insert Files" << endl;
+    cout << " -h, --help                    Show this help" << endl;
 }
 
-int insert_csv(string csv_name) {}
-
+int insert_csv(string csv_name) {
+    string folder;
+    if (csv_name.find("/")) {
+        folder = csv_name.substr(0, csv_name.size() - 4) + ".db";
+    } else {
+        folder = ".";
+    }
+    string cmd = "mkdir -p " + folder;
+    char  cmdd[cmd.size() + 1];
+    strcpy(cmdd,cmd.c_str());
+    system(cmdd);
+    cout << cmdd << endl;
+}
 
 //##################################################\\============================================================================
 //                                                  \\============================================================================
-//                        MAIN                      \\============================================================================
+//                        MAIN
+//                                                  \\============================================================================
 //                                                  \\============================================================================
 //##################################################\\============================================================================
-
 
 int main(int argc, char *argv[]) {
     vector<string> cmdLineArgs(argv, argv + argc);
     vector<string> insertFiles;
     pthread_t aux;
 
-    // Limpar tela
-    clrscr();
+    string folder = argv[0];
+    // folder = folder.substr(0,folder.size()-)
+
+    cout << argv[0] << endl;
 
     // Iniciar modo
     int mode = -1;
 
     // Tratar os argumentos
     for (auto &arg : cmdLineArgs) {
-        if (arg == "--help" || arg == "-help") {
+        if (arg == "--help" || arg == "-h") {
             readHelp();
             return 0;
         }
@@ -160,6 +166,9 @@ int main(int argc, char *argv[]) {
         }
     }
 
+    // Limpar tela
+    clrscr();
+
     // Tratar as criações de bancos
     for (auto i : insertFiles) {
         cout << "Opening " << i << endl;
@@ -169,11 +178,12 @@ int main(int argc, char *argv[]) {
         if (my_file.is_open()) {
             cout << "File open!" << endl;
             cout << "Reading..." << endl;
-            ofstream myfile;
-            //myfile.open("example.bin", ios::out | ios::app | ios::binary);
+            insert_csv(i);
+            // ofstream myfile;
+            // myfile.open("example.bin", ios::out | ios::app | ios::binary);
             pthread_create(&aux, NULL, t_progress, NULL);
             while (getline(my_file, line)) {  // Iniciar barra com progress
-                //myfile << line << endl;
+                // myfile << line << endl;
                 lines++;
             }
             progress = false;

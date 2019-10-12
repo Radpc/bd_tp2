@@ -1,5 +1,6 @@
 tp2: src/helper.o src/main.o
-	g++ -o tp2 src/main.o src/helper.o -pthread
+	mkdir -p bin
+	g++ -o bin/db src/main.o src/helper.o -pthread
 
 src/helper.o: src/helper.cpp
 	g++ -o src/helper.o -c src/helper.cpp

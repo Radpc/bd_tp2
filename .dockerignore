@@ -7,5 +7,6 @@ docker-compose*
 README.md
 LICENSE
 .vscode
-tp2
+bin
 *.swp
+csv_files/*.db

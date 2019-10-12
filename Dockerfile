@@ -12,16 +12,17 @@ RUN \
 # Set environment variables.
 ENV HOME /root
 ENV PS1 'database >' 
+ENV PATH="/root/bin/:${PATH}"
 
 # Define working directory.
-WORKDIR /root
+WORKDIR /root/csv_files
 
 # Copy files
 COPY . $HOME/
 
 # Build
-RUN make
-RUN make clean 
+RUN make -C ../
+RUN make -C ../ clean 
 
 # Change name
 RUN echo PS1="\"[DATABASE] > \"" >> ~/.bashrc
