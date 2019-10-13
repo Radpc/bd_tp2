@@ -11,12 +11,13 @@
 //##################################################\\============================================================================
 
 // Universal modules
+#include <bits/stdc++.h>
 #include <pthread.h>  //Pthreads
 #include <unistd.h>   //Time for debugging
 #include <fstream>    //Files
 #include <iostream>   //Files
+#include <regex>      //Get csv fields
 #include <vector>     //Vector
-#include <bits/stdc++.h> 
 
 // Custom modules
 #include "helper.h"
@@ -35,6 +36,12 @@ using namespace std;
 // Quantidade de linhas lidas já
 int lines = 0;
 
+/// Regex
+std::smatch m;
+
+// Regex de ID
+regex r_id("[[:digit:]]+");
+
 // Progresso mostrando
 bool progress = true;
 
@@ -44,7 +51,7 @@ bool progress = true;
 //                                                  \\============================================================================
 //                                                  \\============================================================================
 //##################################################\\============================================================================
-
+/*
 // Classe da linha do csv
 class csv_line {
    public:
@@ -71,7 +78,7 @@ class csv_line {
     string date_time;
     string snippet;
 };
-
+*/
 //##################################################\\============================================================================
 //                                                  \\============================================================================
 //                      FUNÇÕES
@@ -82,8 +89,8 @@ class csv_line {
 // Thread para demonstrar o progresso
 void *t_progress(void *lpParam) {
     int load = 0;
-    progress = true;
     char l = ' ';
+    progress = true;
     while (progress) {
         switch (load) {
             case 0:
@@ -111,6 +118,7 @@ void *t_progress(void *lpParam) {
 
         usleep(TAXA_ATUALIZACAO);
     }
+    return NULL;
 }
 
 int readHelp() {
@@ -119,7 +127,7 @@ int readHelp() {
     cout << " -h, --help                    Show this help" << endl;
 }
 
-int insert_csv(string csv_name) {
+string create_db_folder(string csv_name) {
     string folder;
     if (csv_name.find("/")) {
         folder = csv_name.substr(0, csv_name.size() - 4) + ".db";
@@ -127,10 +135,42 @@ int insert_csv(string csv_name) {
         folder = ".";
     }
     string cmd = "mkdir -p " + folder;
-    char  cmdd[cmd.size() + 1];
-    strcpy(cmdd,cmd.c_str());
+    char cmdd[cmd.size() + 1];
+    strcpy(cmdd, cmd.c_str());
     system(cmdd);
     cout << cmdd << endl;
+    return folder;
+}
+
+int insertHash(string folder, string line, int mod1, int mod2) {
+    if (regex_search(line, m, r_id)) {
+        fstream file;
+        int id = stoi(m[0]);
+        int subfolder = id % mod1;
+        int bucket = id % mod2;
+
+        file.open(folder + "/hashing/" + to_string(subfolder) + "/" +
+                      to_string(bucket) + ".b",
+                  std::ios_base::app);
+
+        if (!file.is_open()) {
+            string cmd = "mkdir -p " + folder + "/hashing/" +
+                         to_string(subfolder) + " && touch " + folder +
+                         "/hashing/" + to_string(subfolder) + "/" +
+                         to_string(bucket) + ".b";
+            char cmdd[cmd.size() + 1];
+            strcpy(cmdd, cmd.c_str());
+            system(cmdd);
+            file.open(folder + "/hashing/" + to_string(subfolder) + "/" +
+                          to_string(bucket) + ".b",
+                      std::ios_base::app);
+        }
+        file << line;
+        file.close();
+
+    } else {
+        return -1;
+    }
 }
 
 //##################################################\\============================================================================
@@ -141,14 +181,12 @@ int insert_csv(string csv_name) {
 //##################################################\\============================================================================
 
 int main(int argc, char *argv[]) {
+    // Iniciar variáveis
     vector<string> cmdLineArgs(argv, argv + argc);
     vector<string> insertFiles;
-    pthread_t aux;
-
-    string folder = argv[0];
-    // folder = folder.substr(0,folder.size()-)
-
-    cout << argv[0] << endl;
+    pthread_t progress;
+    string folder;
+    string line;
 
     // Iniciar modo
     int mode = -1;
@@ -172,23 +210,38 @@ int main(int argc, char *argv[]) {
     // Tratar as criações de bancos
     for (auto i : insertFiles) {
         cout << "Opening " << i << endl;
+
         ifstream my_file(i);
-        string line;
         lines = 0;
+
         if (my_file.is_open()) {
             cout << "File open!" << endl;
+
+            folder = create_db_folder(i);
+
+            // Contar linhas do csv
             cout << "Reading..." << endl;
-            insert_csv(i);
-            // ofstream myfile;
-            // myfile.open("example.bin", ios::out | ios::app | ios::binary);
-            pthread_create(&aux, NULL, t_progress, NULL);
-            while (getline(my_file, line)) {  // Iniciar barra com progress
-                // myfile << line << endl;
-                lines++;
-            }
+            pthread_create(&progress, NULL, t_progress, NULL);
+            while (getline(my_file, line)) lines++;
             progress = false;
-            cout << "DONE - [" << lines << " linhas]" << endl;
+
+            cout << "Reading - DONE - [" << lines << " linhas]" << endl;
             cout.flush();
+            cout << endl;
+
+            my_file.clear();
+            my_file.seekg(0, ios::beg);
+            lines = 0;
+
+            // Realizar o hashing duplo
+            cout << "Inserting in hash.." << endl;
+            pthread_create(&progress, NULL, t_progress, NULL);
+            while (getline(my_file, line)){
+                insertHash(folder, line, 5, 7);
+                lines++;
+            } 
+            cout << "Hashing - DONE - [" << lines << " linhas]" << endl;
+            progress = false;
 
         } else {
             cout << "Some error ocurred..." << endl;
