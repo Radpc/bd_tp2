@@ -28,6 +28,7 @@
 
 // Config define's
 #define MODE_INSERT 1  // Codigo do modo de inserir
+#define MODE_FIND 2
 
 // Retirar a necessidade de escrever std
 using namespace std;
@@ -127,6 +128,13 @@ int readHelp() {
     cout << " -h, --help                    Show this help" << endl;
 }
 
+bool isNumber(string s) {
+    for (int i = 0; i < s.length(); i++)
+        if (isdigit(s[i]) == false) return false;
+
+    return true;
+}
+
 string create_db_folder(string csv_name) {
     string folder;
     if (csv_name.find("/")) {
@@ -165,12 +173,41 @@ int insertHash(string folder, string line, int mod1, int mod2) {
                           to_string(bucket) + ".b",
                       std::ios_base::app);
         }
-        file << line;
+        file << line << endl;
         file.close();
 
     } else {
         return -1;
     }
+}
+
+string findHash(string folder, int id, int mod1, int mod2) {
+    int subfolder = id % mod1;
+    int bucket = id % mod2;
+    string line;
+
+    string idd = "\"" + to_string(id) + "\"";
+
+
+    ifstream file(folder + "/hashing/" + to_string(subfolder) + "/" +
+                  to_string(bucket) + ".b");
+    file.seekg(0, ios::beg);
+
+    if (file.is_open()) {
+        while (getline(file, line)) {
+            if (line.substr(0,idd.size()).compare(idd) == 0) {
+                file.close();
+                return line;
+            }
+        }
+        return "Could not find " + to_string(id) + ".";
+        file.close();
+    } else {
+        file.close();
+        return "File could not be open! - " + folder;
+    }
+
+    
 }
 
 //##################################################\\============================================================================
@@ -184,6 +221,8 @@ int main(int argc, char *argv[]) {
     // Iniciar variáveis
     vector<string> cmdLineArgs(argv, argv + argc);
     vector<string> insertFiles;
+    int find = -1;
+    string findPlace = "";
     pthread_t progress;
     string folder;
     string line;
@@ -192,15 +231,54 @@ int main(int argc, char *argv[]) {
     int mode = -1;
 
     // Tratar os argumentos
-    for (auto &arg : cmdLineArgs) {
-        if (arg == "--help" || arg == "-h") {
+
+    for (int i = 1; i < cmdLineArgs.size(); i++) {
+        if (cmdLineArgs[i] == "--help" || cmdLineArgs[i] == "-h") {
             readHelp();
             return 0;
-        }
-        if (has_suffix(arg, ".csv")) {
-            insertFiles.push_back(arg);
-        } else if (arg == "-i" || arg == "--insert") {
+        } else if (cmdLineArgs[i] == "--insert" ||
+                   cmdLineArgs[i] == "-i") {  // INSERT
             mode = MODE_INSERT;
+            i++;
+            if (i >= cmdLineArgs.size()) {
+                cout << "Argument number error!" << endl;
+                return -1;
+            }
+            if (has_suffix(cmdLineArgs[i], ".csv")) {
+                insertFiles.push_back(cmdLineArgs[i]);
+            } else {
+                cout << "Error, csv file could not be loaded!" << endl;
+                return -1;
+            }
+        } else if (cmdLineArgs[i] == "--find" ||
+                   cmdLineArgs[i] == "-f") {  // FIND
+            mode = MODE_FIND;
+            i++;
+            if (i >= cmdLineArgs.size()) {
+                cout << "Argument number error!" << endl;
+                return -1;
+            }
+            findPlace = cmdLineArgs[i];
+            i++;
+            if (i >= cmdLineArgs.size()) {
+                cout << "Argument number error!" << endl;
+                return -1;
+            }
+
+            if (isNumber(cmdLineArgs[i])) {
+                find = stoi(cmdLineArgs[i]);
+            } else {
+                cout << "Error! Insert a valid ID" << endl;
+                return -1;
+            }
+
+        } else if (mode == MODE_INSERT and
+                   has_suffix(cmdLineArgs[i], ".csv")) {  // INSERT MULTIPLE
+            insertFiles.push_back(cmdLineArgs[i]);
+        } else {
+            cout << "Error" << endl;
+            ;
+            return -1;
         }
     }
 
@@ -236,15 +314,24 @@ int main(int argc, char *argv[]) {
             // Realizar o hashing duplo
             cout << "Inserting in hash.." << endl;
             pthread_create(&progress, NULL, t_progress, NULL);
-            while (getline(my_file, line)){
+            while (getline(my_file, line)) {
                 insertHash(folder, line, 5, 7);
                 lines++;
-            } 
+            }
             cout << "Hashing - DONE - [" << lines << " linhas]" << endl;
             progress = false;
 
         } else {
             cout << "Some error ocurred..." << endl;
+            return -1;
+        }
+    }
+
+    if (findPlace != "") {
+        if (find != -1) {
+            cout << findHash(findPlace, find, 5, 7) << endl;
+        } else {
+            cout << "Specify the path!" << endl;
             return -1;
         }
     }
