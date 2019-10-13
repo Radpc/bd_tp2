@@ -127,9 +127,15 @@ void *t_progress(void *lpParam) {
 }
 
 int readHelp() {
-    cout << " -[DB - HELP]-" << endl << endl;
-    cout << " -i, --insert [FILES]          Insert Files" << endl;
+    cout << "usage: db [-h] [-r] [-t] [-i \"/path/to/file.csv\"] [-f "
+            "\"/path/to/folder.db/\" [ID's]] [-n \"/path/to/file.csv\" [ID's]]"
+         << endl << endl;
     cout << " -h, --help                    Show this help" << endl;
+    cout << " -r, --reduced                 Reduced mode" << endl;
+    cout << " -t, --timed                   Timed mode" << endl;
+    cout << " -i, --insert [FILES]          Insert Files" << endl;
+    cout << " -f, --find [/folder.db] [id]  Find (hash mode)" << endl;
+    cout << " -n, --normal [file.csv] [id]  Find (Sequential mode)" << endl;
 }
 
 bool isNumber(string s) {
