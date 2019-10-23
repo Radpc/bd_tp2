@@ -2,35 +2,53 @@
 
 #define MAX_SIZE 8
 
-class node {
-   public:
-    node(int idd, int seekGg) {
-        id = idd;
-        seekG = seekGg;
+#include <stdio.h>
+#include <iostream>
+
+using namespace std;
+
+typedef struct node {
+    int id = 0;
+    long int seek = 0;
+    long int ponteiro_esquerda = 0;
+    long int ponteiro_direita = 50;
+    long int ponteiro_next = 50;
+} node;
+
+node getNode(FILE *f, int id) {
+    node nd;
+    fseek(f, id * sizeof(struct node), 0);
+    fread(&nd, sizeof(struct node), 1, f);
+    return nd;
+}
+
+bool addNode(FILE *f, node nd) {
+    node search = getNode(f, 0);
+
+    while () {
+        if (nd.id > search.id) {
+            
+        }
     }
-    int id;
-    int seekG;
-    node* left;   // always goes down, if NULL then it's leaf
-    node* right;  // almost always go right
-};
+}
 
-class nodepack {
-   public:
-    std::vector<node> pack;
-    int max_size = MAX_SIZE;
-};
+int main(int argc, char const *argv[]) {
+    FILE *f;
+    f = fopen("Teste.txt", "wb");
 
-class tree {
-   public:
-    tree() {
-        nodepack k;
-        *packRaiz = k;
-    }
+    node n;
+    n.id = 10;
+    n.seek = 20;
+    n.ponteiro_direita = 500;
+    n.ponteiro_esquerda = 500;
 
-    bool add(int id, int seekg) {
-        node n(id, seekg);
-        return true;
-    }
+    fwrite(&n, sizeof(struct node), 1, f);
 
-    nodepack* packRaiz;
-};
+    fclose(f);
+    f = fopen("Teste.txt", "rb");
+
+    node k = getNode(f, 0);
+    cout << k.ponteiro_direita << endl;
+
+    return 0;
+}

@@ -7,18 +7,19 @@ RUN \
   apt update && \
   apt install -y make && \
   apt install -y g++ && \
+  apt install -y git
+
+RUN \
+  git clone https://github.com/Radpc/bd_tp2.git /root/tp2/ && \
   rm -rf /var/lib/apt/lists/*
 
 # Set environment variables.
 ENV HOME /root
 ENV PS1 'database >' 
-ENV PATH="/root/bin/:${PATH}"
+ENV PATH="/root/tp2/bin/:${PATH}"
 
 # Define working directory.
-WORKDIR /root/csv_files
-
-# Copy files
-COPY . $HOME/
+WORKDIR /root/tp2/csv_files
 
 # Build
 RUN make -C ../
