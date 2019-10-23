@@ -18,7 +18,11 @@
 #include <fstream>    //Files
 #include <iostream>   //Files
 #include <regex>      //Get csv fields
-#include <vector>     //Vector
+
+#ifndef VECTOR
+#define VECTOR
+#include <vector>
+#endif
 
 // Custom modules
 #include "helper.h"
@@ -28,11 +32,15 @@
 #define TAXA_ATUALIZACAO SEC / 10  // O fps
 #define REDUCE_TO 60
 
-// SIZES
-#define TITLE_SIZE 300
-#define WRITERS_SIZE 150
-#define DATE_SIZE 30
-#define SNIPPET_SIZE 1024
+// // SIZES
+// #define TITLE_SIZE 300
+// #define WRITERS_SIZE 150
+// #define DATE_SIZE 30
+// #define SNIPPET_SIZE 1024
+
+// HASHES
+#define FIRST_HASH 127
+#define SECOND_HASH 131
 
 // Config define's
 #define MODE_INSERT 1  // Codigo do modo de inserir
@@ -52,7 +60,7 @@ std::smatch m;
 
 // Regex de ID
 regex r_id("[[:digit:]]+");
-regex r_field("(.*?)(\";|;$)");
+// regex r_field("(.*?)(\";|;$)");
 
 // Progresso mostrando
 bool progress = true;
@@ -63,7 +71,7 @@ bool progress = true;
 //                                                  \\============================================================================
 //                                                  \\============================================================================
 //##################################################\\============================================================================
-
+/*
 // Struct
 
 typedef struct csv_struct {
@@ -77,85 +85,51 @@ typedef struct csv_struct {
 
 } csv_struct;
 
-class Csv_parser {
-   public:
-    csv_struct blank_csv_struct(){
-        csv_struct c;
-        c.id = -1;
-        c.year = 0;
-        c.citations = 0;
-        c.title
-    }
+csv_struct create_csv_struct(string line) {
+    csv_struct s;
+    int char_counter = 0;
+    int attr_counter = 0;
+    string aux = line;
 
+    while (regex_search(line, m, r_field)) {
+        switch (attr_counter) {
+            // ID
+            case 0:
+                s.id = stoi(m[0].str().substr(1, m[0].str().size() - 2));
+                break;
 
-    csv_struct create_csv_struct(string line) {
-        csv_struct s;
-        int char_counter = 0;
-        int attr_counter = 0;
-        string aux = line;
+            // TITLE
+            case 1:
+                strcpy(s.title, m[0].str().c_str());
+                break;
 
-        while (regex_search(line, m, r_field)) {
-            switch (attr_counter) {
-                // ID
-                case 0:
-                    try {
-                        s.id =
-                            stoi(m[0].str().substr(1, m[0].str().size() - 2));
-                    } catch (std::invalid_argument) {
-                        cout << m[0].str().substr(1, m[0].str().size() - 2)
-                             << " - ERROR, COULD NOT TRANSFORM THIS INTO ID"
-                             << endl;
-                    }
-                    break;
+            // YEAR
+            case 2:
+                s.year = stoi(m[0].str().substr(1, m[0].str().size() - 2));
+                break;
 
-                // TITLE
-                case 1:
-                    strcpy(s.title, m[0].str().c_str());
-                    break;
+            // WRITERS
+            case 3:
+                strcpy(s.writers, m[0].str().c_str());
+                break;
 
-                // YEAR
-                case 2:
-                    try {
-                        s.year =
-                            stoi(m[0].str().substr(1, m[0].str().size() - 2));
-                    } catch (std::invalid_argument) {
-                        cout << m[0].str().substr(1, m[0].str().size() - 2)
-                             << " - ERROR, COULD NOT TRANSFORM THIS INTO YEAR"
-                             << endl;
-                    }
-                    break;
-
-                // WRITERS
-                case 3:
-                    strcpy(s.writers, m[0].str().c_str());
-                    break;
-
-                // CITATIONS
-                case 4:
-                    try {
-                        s.citations =
-                            stoi(m[0].str().substr(1, m[0].str().size() - 2));
-                    } catch (std::invalid_argument) {
-                        cout << m[0].str().substr(1, m[0].str().size() - 2)
-                             << " - ERROR, COULD NOT TRANSFORM THIS INTO "
-                                "CITATIONS"
-                             << endl;
-                    }
-
-                    break;
-                // DATE
-                case 5:
-                    strcpy(s.date_time, m[0].str().c_str());
-                    break;
-            }
-            attr_counter++;
-            char_counter += m[0].str().size();
-            line = m.suffix();
+            // CITATIONS
+            case 4:
+                s.citations = stoi(m[0].str().substr(1, m[0].str().size() - 2));
+                break;
+            // DATE
+            case 5:
+                strcpy(s.date_time, m[0].str().c_str());
+                break;
         }
-        strcpy(s.snippet, aux.substr(char_counter + 1).c_str());
-        return s;
+        attr_counter++;
+        char_counter += m[0].str().size();
+        line = m.suffix();
     }
-};
+    strcpy(s.snippet, aux.substr(char_counter + 1).c_str());
+    return s;
+}
+*/
 
 //##################################################\\============================================================================
 //                                                  \\============================================================================
@@ -432,7 +406,6 @@ int main(int argc, char *argv[]) {
     // Tratar as criações de bancos
     for (auto i : insertFiles) {
         cout << "Opening " << i << endl;
-        Csv_parser csv_p;
         ifstream my_file(i);
         lines = 0;
 
@@ -457,7 +430,7 @@ int main(int argc, char *argv[]) {
             cout << "Inserting in hash.." << endl;
             pthread_create(&progress, NULL, t_progress, NULL);
             while (getline(my_file, line)) {
-                csv_struct p = csv_p.create_csv_struct(line);
+                insertHash(folder, line, FIRST_HASH, SECOND_HASH);
                 lines++;
             }
             cout << "Hashing - DONE - [" << lines << " linhas]" << endl;
@@ -475,7 +448,7 @@ int main(int argc, char *argv[]) {
         if (find != -1) {
             cout << "[Hash search]" << endl;
             if (timed) time_start = clock();
-            cout << findHash(findPlace, find, 23, 97) << endl;
+            cout << findHash(findPlace, find, FIRST_HASH, SECOND_HASH) << endl;
             if (timed) {
                 time_finish = clock();
                 total_time = double(time_finish - time_start) / CLOCKS_PER_SEC;
