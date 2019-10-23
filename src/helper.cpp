@@ -8,3 +8,10 @@ bool has_suffix(const std::string &str, const std::string &suffix) {
 // Função para limpar a tela
 void clrscr() { system("@cls||clear"); }
 
+// Checar se é número
+bool isNumber(std::string s) {
+    for (int i = 0; i < s.length(); i++)
+        if (isdigit(s[i]) == false) return false;
+
+    return true;
+}

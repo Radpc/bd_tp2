@@ -1,13 +1,13 @@
 #include "bplus.h"
-#ifndef VECTOR
-#define VECTOR
-#include <vector>
-#endif
 
 #define MAX_SIZE 8
 
 class node {
    public:
+    node(int idd, int seekGg) {
+        id = idd;
+        seekG = seekGg;
+    }
     int id;
     int seekG;
     node* left;   // always goes down, if NULL then it's leaf
@@ -26,5 +26,11 @@ class tree {
         nodepack k;
         *packRaiz = k;
     }
+
+    bool add(int id, int seekg) {
+        node n(id, seekg);
+        return true;
+    }
+
     nodepack* packRaiz;
 };

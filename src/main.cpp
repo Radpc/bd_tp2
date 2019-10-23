@@ -11,26 +11,34 @@
 //##################################################\\============================================================================
 
 // Universal modules
-#include <bits/stdc++.h>
 #include <pthread.h>  //Pthreads
 #include <unistd.h>   //Time for debugging
 #include <ctime>      //Time
-#include <fstream>    //Files
 #include <iostream>   //Files
 #include <regex>      //Get csv fields
+
+#ifndef FSTREAM
+#define FSTREAM
+#include <fstream>
+#endif
 
 #ifndef VECTOR
 #define VECTOR
 #include <vector>
 #endif
 
+#ifndef REDUCE_TO
+#define REDUCE_TO 60
+#endif
+
 // Custom modules
+#include "bplus.h"
+#include "hashing.h"
 #include "helper.h"
 
 // Options define's
 #define SEC 1000000                // Valor de um segundo
 #define TAXA_ATUALIZACAO SEC / 10  // O fps
-#define REDUCE_TO 60
 
 // // SIZES
 // #define TITLE_SIZE 300
@@ -53,13 +61,7 @@ using namespace std;
 /// Global Variables
 // Quantidade de linhas lidas já
 int lines = 0;
-bool reduced = false;
 
-/// Regex
-std::smatch m;
-
-// Regex de ID
-regex r_id("[[:digit:]]+");
 // regex r_field("(.*?)(\";|;$)");
 
 // Progresso mostrando
@@ -73,6 +75,8 @@ bool progress = true;
 //##################################################\\============================================================================
 /*
 // Struct
+
+// MUITO DEVAGAR!!!!!
 
 typedef struct csv_struct {
     int id;
@@ -186,13 +190,6 @@ int readHelp() {
     cout << " -n, --normal [file.csv] [id]  Find (Sequential mode)" << endl;
 }
 
-bool isNumber(string s) {
-    for (int i = 0; i < s.length(); i++)
-        if (isdigit(s[i]) == false) return false;
-
-    return true;
-}
-
 string create_db_folder(string csv_name) {
     string folder;
     if (csv_name.find("/")) {
@@ -207,68 +204,8 @@ string create_db_folder(string csv_name) {
     return folder;
 }
 
-int insertHash(string folder, string line, int mod1, int mod2) {
-    if (regex_search(line, m, r_id)) {
-        fstream file;
-        int id = stoi(m[0]);
-        int subfolder = id % mod1;
-        int bucket = id % mod2;
-
-        file.open(folder + "/hashing/" + to_string(subfolder) + "/" +
-                      to_string(bucket) + ".b",
-                  std::ios_base::app);
-
-        if (!file.is_open()) {
-            string cmd = "mkdir -p " + folder + "/hashing/" +
-                         to_string(subfolder) + " && touch " + folder +
-                         "/hashing/" + to_string(subfolder) + "/" +
-                         to_string(bucket) + ".b";
-            char cmdd[cmd.size() + 1];
-            strcpy(cmdd, cmd.c_str());
-            system(cmdd);
-            file.open(folder + "/hashing/" + to_string(subfolder) + "/" +
-                          to_string(bucket) + ".b",
-                      std::ios_base::app);
-        }
-        file << line << endl;
-        file.close();
-
-    } else {
-        return -1;
-    }
-}
-
-string findHash(string folder, int id, int mod1, int mod2) {
-    int subfolder = id % mod1;
-    int bucket = id % mod2;
-    string line;
-
-    string idd = "\"" + to_string(id) + "\"";
-
-    ifstream file(folder + "/hashing/" + to_string(subfolder) + "/" +
-                  to_string(bucket) + ".b");
-    file.seekg(0, ios::beg);
-
-    if (file.is_open()) {
-        while (getline(file, line)) {
-            if (line.substr(0, idd.size()).compare(idd) == 0) {
-                file.close();
-                if (reduced and line.size() > REDUCE_TO) {
-                    return line.substr(0, REDUCE_TO) + "...";
-                } else {
-                    return line;
-                }
-            }
-        }
-        return "Could not find " + to_string(id) + ".";
-        file.close();
-    } else {
-        file.close();
-        return "File could not be open! - " + folder;
-    }
-}
-
-string normalSearch(string csv, int id) {
+// Busca sequencial para comparação
+string normalSearch(string csv, int id, bool reduced = false) {
     ifstream file(csv);
     string line;
     string idd = "\"" + to_string(id) + "\"";
@@ -298,10 +235,10 @@ string normalSearch(string csv, int id) {
 //                        MAIN
 //                                                  \\============================================================================
 //                                                  \\============================================================================
-//                                                  \\============================================================================
 //##################################################\\============================================================================
 
 int main(int argc, char *argv[]) {
+    bool reduced = false;
     // List of files
     vector<string> cmdLineArgs(argv, argv + argc);
     vector<string> insertFiles;
@@ -448,7 +385,8 @@ int main(int argc, char *argv[]) {
         if (find != -1) {
             cout << "[Hash search]" << endl;
             if (timed) time_start = clock();
-            cout << findHash(findPlace, find, FIRST_HASH, SECOND_HASH) << endl;
+            cout << findHash(findPlace, find, FIRST_HASH, SECOND_HASH, reduced)
+                 << endl;
             if (timed) {
                 time_finish = clock();
                 total_time = double(time_finish - time_start) / CLOCKS_PER_SEC;
@@ -466,7 +404,7 @@ int main(int argc, char *argv[]) {
         if (normalFind != -1) {
             cout << "[Normal search]" << endl;
             if (timed) time_start = clock();
-            cout << normalSearch(normalPlace, normalFind) << endl;
+            cout << normalSearch(normalPlace, normalFind, reduced) << endl;
             if (timed) {
                 time_finish = clock();
                 total_time = double(time_finish - time_start) / CLOCKS_PER_SEC;

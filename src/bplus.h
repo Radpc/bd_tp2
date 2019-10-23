@@ -1,5 +1,11 @@
-#ifndef HELPER_H
-#define HELPER_H
+#ifndef BPLUS
+#define BPLUS
+
+#ifndef VECTOR
+#define VECTOR
+#include <vector>
+#endif
+
 
 
 #endif
