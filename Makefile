@@ -15,5 +15,5 @@ src/main.o: src/main.cpp
 	g++ -o src/main.o -c src/main.cpp
 
 clean:
-	rm -rf src
+	rm -rf src/*.o
 	rm Makefile

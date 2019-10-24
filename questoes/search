@@ -1,0 +1,3 @@
+#!/bin/bash
+
+db -t -r -f ../csv_files/entrada.db/ $1

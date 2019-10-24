@@ -6,6 +6,4 @@
 #include <vector>
 #endif
 
-
-
 #endif

@@ -1,0 +1,2 @@
+#!/bin/bash
+db -i ../csv_files/entrada.csv
